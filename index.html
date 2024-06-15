@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Generate a secure password based on user-selected criteria">
+  <title>Password Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #5C67F2;
+      --hover-color: #434aee;
+      --error-color: #f44336;
+      --success-color: #4CAF50;
+      --warning-color: #ffc107;
+      --font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: var(--font-family);
+      background-color: #f4f4f4;
+      margin: 0;
+      color: #333;
+    }
+
+    .container {
+      text-align: center;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 24px;
+    }
+
+    .password {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      background-color: #e3e4fa;
+      border-radius: 4px;
+      padding: 10px;
+      word-break: break-all;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: var(--hover-color);
+    }
+
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 140px;
+      background-color: var(--primary-color);
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -70px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .strength-bar {
+      width: 100%;
+      height: 10px;
+      background-color: #ddd;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
+    .strength-bar .bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .strength-bar .bar-1 {
+      background-color: var(--error-color);
+    }
+
+    .strength-bar .bar-2 {
+      background-color: var(--warning-color);
+    }
+
+    .strength-bar .bar-3 {
+      background-color: var(--warning-color);
+    }
+
+    .strength-bar .bar-4 {
+      background-color: var(--success-color);
+    }
+
+    .input-error {
+      border: 2px solid var(--error-color);
+    }
+
+    .error-message {
+      color: var(--error-color);
+      font-size: 14px;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        width: 100%;
+        padding: 10px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Password Generator</h1>
+    <div role="alert" aria-live="polite" class="password" aria-label="Generated password"></div>
+    <button class="btn" onclick="generatePassword()">Generate Password</button>
+    <button class="btn" onclick="copyPassword()">Copy Password</button>
+    <br>
+    <label for="length" class="tooltip">
+      Password Length:
+      <span class="tooltiptext">Specify the length of the password</span>
+    </label>
+    <input type="number" id="length" name="length" min="1" max="50" value="12" aria-describedby="lengthHelp"
+      oninput="validateLength()">
+    <small id="lengthHelp" class="form-text text-muted">Choose a length between 1 and 50.</small>
+    <span id="lengthError" class="error-message">Invalid length: must be between 1 and 50.</span>
+    <br>
+    <label for="lowercase" class="tooltip">
+      Include Lowercase Letters:
+      <span class="tooltiptext">Include lowercase letters in the password</span>
+    </label>
+    <input type="checkbox" id="lowercase" name="lowercase" checked aria-label="Include lowercase letters">
+    <br>
+    <label for="uppercase" class="tooltip">
+      Include Uppercase Letters:
+      <span class="tooltiptext">Include uppercase letters in the password</span>
+    </label>
+    <input type="checkbox" id="uppercase" name="uppercase" checked aria-label="Include uppercase letters">
+    <br>
+    <label for="numbers" class="tooltip">
+      Include Numbers:
+      <span class=" tooltiptext">Include numbers in the password</span>
+    </label>
+    <input type="checkbox" id="numbers" name="numbers" checked aria-label="Include numbers">
+    <br>
+
+    <label for="special" class="tooltip">
+      Include Special Characters:
+      <span class="tooltiptext">Include special characters in the password</span>
+    </label>
+    <input type="checkbox" id="special" name="special" checked aria-label="Include special characters">
+    <br>
+    <div class="strength-bar">
+      <div class="bar" aria-label="Password strength indicator"></div>
+    </div>
+  </div>
+
+  <script>
+    function generatePassword() {
+      var length = document.getElementById("length").value;
+      var lowercase = document.getElementById("lowercase").checked;
+      var uppercase = document.getElementById("uppercase").checked;
+      var numbers = document.getElementById("numbers").checked;
+      var special = document.getElementById("special").checked;
+      var charset = "";
+
+      if (!lowercase && !uppercase && !numbers && !special) {
+        alert('Please select at least one character type.');
+        return;
+      }
+
+      if (length < 1 || length > 50) {
+        alert('Password length must be between 1 and 50.');
+        return;
+      }
+
+      if (lowercase) {
+        charset += "abcdefghijklmnopqrstuvwxyz";
+      }
+      if (uppercase) {
+        charset += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      }
+      if (numbers) {
+        charset += "0123456789";
+      }
+      if (special) {
+        charset += "!@#$%^&*()_+~|}{[]:;?><,./-=";
+      }
+
+      var password = "";
+      for (var i = 0, n = charset.length; i < length; ++i) {
+        password += charset.charAt(Math.floor(Math.random() * n));
+      }
+      document.querySelector(".password").textContent = password;
+
+      checkPasswordStrength(password);
+    }
+
+    function copyPassword() {
+      var password = document.querySelector(".password").textContent;
+      navigator.clipboard.writeText(password);
+      var copyButton = document.querySelectorAll(".btn")[1];
+      copyButton.textContent = "Copied!";
+      setTimeout(function () {
+        copyButton.textContent = "Copy Password";
+      }, 2000);
+    }
+
+    function checkPasswordStrength(password) {
+      var strength = 0;
+
+      if (password.length >= 8) {
+        strength += 1;
+      }
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) {
+        strength += 1;
+      }
+      if (/[0-9]/.test(password)) {
+        strength += 1;
+      }
+      if (/[!@#$%^&*()_+~|}{[\]:;?><,.\/-=]/.test(password)) {
+        strength += 1;
+      }
+
+      var passwordStrength = document.querySelector(".strength-bar .bar");
+      passwordStrength.style.width = (strength / 4) * 100 + "%";
+
+      if (strength === 1) {
+        passwordStrength.classList.add("bar-1");
+        passwordStrength.classList.remove("bar-2", "bar-3", "bar-4");
+      } else if (strength === 2) {
+        passwordStrength.classList.add("bar-2");
+        passwordStrength.classList.remove("bar-1", "bar-3", "bar-4");
+      } else if (strength === 3) {
+        passwordStrength.classList.add("bar-3");
+        passwordStrength.classList.remove("bar-1", "bar-2", "bar-4");
+      } else if (strength === 4) {
+        passwordStrength.classList.add("bar-4");
+        passwordStrength.classList.remove("bar-1", "bar-2", "bar-3");
+      }
+    }
+
+    function validateLength() {
+      var lengthInput = document.getElementById("length");
+      var lengthError = document.getElementById("lengthError");
+      var length = lengthInput.value;
+
+      if (length < 1 || length > 50) {
+        lengthInput.classList.add("input-error");
+        lengthError.style.display = "block";
+      } else {
+        lengthInput.classList.remove("input-error");
+        lengthError.style.display = "none";
+      }
+    }
+  </script>
+</body>
+
+</html>
